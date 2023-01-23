@@ -14,7 +14,7 @@ export default function MapContainer(
     const fetchData = async () => {
       try {
         const mapUrl = await fetch(
-          `http://localhost:8080/generateMap?lat=${lat}&lng=${lng}`,
+          `http://localhost:9000/generateMap?lat=${lat}&lng=${lng}`,
         );
         setMapUrl(await mapUrl.json());
       } catch (e) {
