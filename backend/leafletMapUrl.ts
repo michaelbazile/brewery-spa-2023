@@ -1,4 +1,4 @@
-import sha1 from "npm:sha1@1.1.1";
+import sha1 from "https://esm.sh/sha1@1.1.1";
 import { v4 as uuidv4 } from "npm:uuid@9.0.0";
 import { env } from "./config.ts";
 
