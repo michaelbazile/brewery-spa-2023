@@ -5,49 +5,8 @@ import { env } from "./config.ts";
 import { leafletMapUrlGenerator } from "./leafletMapUrl.ts";
 
 const port = Number(env.PORT);
-
-const router = new Router();
-router.get(
-  "/generateMap",
-  async ({
-    request: {
-      url: { searchParams },
-    },
-    response,
-  }) => {
-    const lat = searchParams.get("lat");
-    const lng = searchParams.get("lng");
-
-    if (lat === "null" || lng === "null") {
-      response.body = JSON.stringify(env.DEFAULT_IMAGE_URL);
-      return;
-    }
-
-    const browser = await puppeteer.launch();
-    const page = await browser.newPage();
-    await page.goto(`${env.LEAFLET_MAP_URL}?lat=${lat}&lng=${lng}`);
-    await page.waitForXPath(
-      "//img[@class='leaflet-tile leaflet-tile-loaded'][1]"
-    );
-    const content = await page.$("#map");
-
-    const screenshotBuffer = await content!.screenshot({
-      omitBackground: true,
-      encoding: "base64",
-    });
-    const screenshotBufferURI = `data:image/png;base64,${screenshotBuffer}`;
-    const { url: cloudinaryMapURL } = await leafletMapUrlGenerator(
-      screenshotBufferURI
-    );
-
-    await page.close();
-    await browser.close();
-
-    response.body = JSON.stringify(cloudinaryMapURL);
-  }
-);
-
 const app = new Application();
+const router = new Router();
 app.use(oakCors());
 app.use(router.routes());
 app.use(router.allowedMethods());
@@ -58,7 +17,7 @@ app.use(async (ctx, next) => {
   console.log(`${ctx.request.method} ${ctx.request.url}`);
 });
 
-// Servers up leafletmap
+//Servers up leafletmap
 app.use(async (ctx, next) => {
   try {
     await ctx.send({
@@ -69,6 +28,48 @@ app.use(async (ctx, next) => {
     await next();
   }
 });
+router
+  .get("/", (ctx) => {
+    ctx.response.body = "Hello World!";
+  })
+  .get(
+    "/generateMap",
+    async ({
+      request: {
+        url: { searchParams },
+      },
+      response,
+    }) => {
+      const lat = searchParams.get("lat");
+      const lng = searchParams.get("lng");
+      if (`${lat}` === "null" || `${lng}` === "null") {
+        response.body = JSON.stringify(env.DEFAULT_IMAGE_URL);
+        return;
+      }
 
-console.log(`Listening on http://localhost:${port} 🍻`);
+      const browser = await puppeteer.launch();
+      const page = await browser.newPage();
+      await page.goto(`${env.LEAFLET_MAP_URL}?lat=${lat}&lng=${lng}`);
+      await page.waitForXPath(
+        "//img[@class='leaflet-tile leaflet-tile-loaded'][1]"
+      );
+      const content = await page.$("#map");
+
+      const screenshotBuffer = await content!.screenshot({
+        omitBackground: true,
+        encoding: "base64",
+      });
+      const screenshotBufferURI = `data:image/png;base64,${screenshotBuffer}`;
+      const { url: cloudinaryMapURL } = await leafletMapUrlGenerator(
+        screenshotBufferURI
+      );
+
+      await page.close();
+      await browser.close();
+
+      response.body = JSON.stringify(cloudinaryMapURL);
+    }
+  );
+
+console.log(`Server listening on http://localhost:${port} 🍻`);
 await app.listen({ port });
