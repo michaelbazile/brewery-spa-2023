@@ -4,6 +4,8 @@
 
 Start the project:
 
+To spin up fresh server run:
+
 ```
 deno task start
 ```
